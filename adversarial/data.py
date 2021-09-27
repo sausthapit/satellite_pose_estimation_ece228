@@ -12,8 +12,8 @@ from scipy import ndimage
 import cv2
 #from scipy.misc import imread, imresize
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import imread
-import viewer
+
+# import viewer
 
 class ConcatDataset(Dataset):
     def __init__(self, *datasets):
@@ -69,7 +69,7 @@ class AdvDataset(Dataset):
             hmb = self.data.iloc[idx, 2]
             # # hmb = self.images.iloc[idx, 1]
             img_address = os.path.join(self.root_dir, hmb, image_name)
-            # image = io.imread(img_address)
+            # image = cv2.imread(img_address)
             image = np.load(img_address)
             # print(steer)
 
@@ -178,7 +178,7 @@ class UdacityDataset(Dataset):
             hmb = self.data.iloc[idx, 2]
             # # hmb = self.images.iloc[idx, 1]
             img_address = os.path.join(self.root_dir, hmb, 'center', image_name)
-            image = io.imread(img_address)
+            image = cv2.imread(img_address)
             # print(steer)
 
             sample = {'image': image, 'steer': np.array([steer])}
@@ -186,7 +186,7 @@ class UdacityDataset(Dataset):
             image_name = self.data.iloc[idx, 0] + '.jpg'
             steer = self.data.iloc[idx, 1]            
             img_address = os.path.join(self.root_dir, self.hmb_list[0], 'center', image_name)
-            image = io.imread(img_address)
+            image = cv2.imread(img_address)
             sample = {'image': image, 'steer': np.array([steer])}
         
         if self.transform:
@@ -291,9 +291,9 @@ if __name__ == "__main__":
     # plt.imshow(ndimage.rotate(sample['image'], 80, reshape=False))
     # ax = plt.subplot(1, 3, 3)
     # plt.imshow(ndimage.rotate(sample['image'], -80, reshape=False))
-    fig = plt.figure()
-    plt.imshow(cv2.resize(viewer.draw(ndimage.rotate(sample['image'], 30, reshape=False), sample['steer'], 0.5), (128, 128)))
-    plt.show()
+    # fig = plt.figure()
+    # plt.imshow(cv2.resize(viewer.draw(ndimage.rotate(sample['image'], 30, reshape=False), sample['steer'], 0.5), (128, 128)))
+    # plt.show()
     # fig = plt.figure()
     # for i in range(4):
     #     j = random.randint(0, len(dataset))
