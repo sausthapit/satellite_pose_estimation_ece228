@@ -22,7 +22,8 @@ from optimization_universal_attack import generate_noise
 from advGAN_attack import advGAN_Attack
 import os
 from torch.utils.data import DataLoader
-from scipy.misc import imsave, imread
+# from scipy.misc import imsave, imread
+from matplotlib.pyplot import imread
 import cv2
 import os
 import argparse
