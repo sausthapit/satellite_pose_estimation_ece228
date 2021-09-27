@@ -5,15 +5,15 @@ import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from data import UdacityDataset, Rescale, Preprocess, ToTensor
-from model import BaseCNN
-from viewer import draw
-from scipy.misc import imresize
+#from model import BaseCNN
+#from viewer import draw
+#from scipy.misc import imresize
 from torchvision import datasets, transforms
 from fgsm_attack import fgsm_attack
 from advGAN.models import Generator
 from optimization_attack import optimized_attack
-from scipy.misc import imread, imresize
-
+#from scipy.misc import imread, imresize
+import cv2
 
 def exp1_fig():
     model = BaseCNN()
@@ -23,7 +23,7 @@ def exp1_fig():
     model = model.to(device)
     model.eval()
     target = 0.3
-    image = imread(
+    image = cv2.imread(
         'F:\\udacity-data\\testing\\center\\1479425441182877835.jpg')[200:, :]
     image = imresize(image, (128, 128))
     image = image / 255.

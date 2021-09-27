@@ -11,9 +11,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from data import UdacityDataset, Rescale, Preprocess, ToTensor
-from model import BaseCNN
-from viewer import draw
-from scipy.misc import imresize
+#from model import BaseCNN
+#from viewer import draw
+#from scipy.misc import imresize
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
