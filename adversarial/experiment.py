@@ -26,7 +26,8 @@ from scipy.misc import imsave, imread
 import cv2
 import os
 import argparse
-
+from poseloss_new_arch import myModel
+from utils import PyTorchSatellitePoseEstimationDataset
 """
 Experiment 1: test the total attack success rate of 5 attacks on 3 models 
 """
@@ -38,25 +39,31 @@ def experiment_1():
     basecnn = 'baseline.pt'
     nvidia = 'nvidia.pt'
     vgg16 = 'vgg16.pt'
-    model1 = BaseCNN()
-    model1.to(device)
-    model1.load_state_dict(torch.load(basecnn))
-    model1.eval()
-    model2 = Nvidia()
-    model2.to(device)
-    model2.load_state_dict(torch.load(nvidia))
-    model2.eval()
-    model3 = Vgg16()
-    model3.to(device)
-    model3.load_state_dict(torch.load(vgg16))
-    model3.eval()
-    target_models.append(('baseline', model1))
+    satellitenet='satellitenet.pth'
+    # model1 = BaseCNN()
+    # model1.to(device)
+    # model1.load_state_dict(torch.load(basecnn))
+    # model1.eval()
+    # model2 = Nvidia()
+    # model2.to(device)
+    # model2.load_state_dict(torch.load(nvidia))
+    # model2.eval()
+    # model3 = Vgg16()
+    # model3.to(device)
+    # model3.load_state_dict(torch.load(vgg16))
+    # model3.eval()
+    model4=myModel()
+    model4.to(device)
+    model4.load_state_dict(torch.load(satellitenet))
+    model4.eval()
+    target_models.append(('baseline', model4))
     # target_models.append(('vgg16', model3))
     # target_models.append(('nvidia', model2))
 
-    root_dir = '../udacity-data'
+    # root_dir = '../udacity-data'
+    speed_root='../dataset/speed'
     target = 0.3
-    attacks = ('FGSM', 'Optimization', 'Optimization Universal', 'AdvGAN', 'AdvGAN Universal')
+    # attacks = ('FGSM', 'Optimization', 'Optimization Universal', 'AdvGAN', 'AdvGAN Universal')
     fgsm_result = []
     opt_result = []
     optu_result = []
@@ -69,29 +76,37 @@ def experiment_1():
     advGANU_diff = []
     # models = ('baseline')
 
-    full_indices = list(range(5614))
-    test_indices = list(np.random.choice(5614, int(0.2 * 5614), replace=False))
-    train_indices = list(set(full_indices).difference(set(test_indices)))
-    image_size = (128, 128)
+    # full_indices = list(range(5614))
+    # test_indices = list(np.random.choice(5614, int(0.2 * 5614), replace=False))
+    # train_indices = list(set(full_indices).difference(set(test_indices)))
+    image_size = (224,224)
     # if model_name == 'baseline':
     #     image_size = (128, 128)
     # elif model_name == 'nvidia':
     #     image_size = (66, 200)
     # elif model_name == 'vgg16':
     #     image_size = (224, 224)
-    test_composed = transforms.Compose([Rescale((image_size[1], image_size[0])), Preprocess(), ToTensor()])
+    # test_composed = transforms.Compose([Rescale((image_size[1], image_size[0])), Preprocess(), ToTensor()])
     # train_dataset = UdacityDataset(root_dir, ['HMB1', 'HMB2', 'HMB4'], test_composed, type_='train')
-    full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
+    # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
+    data_transforms = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    full_dataset = PyTorchSatellitePoseEstimationDataset('train', speed_root, data_transforms)
+    test_set = PyTorchSatellitePoseEstimationDataset('test', speed_root, data_transforms)
 
-    train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
-    test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
-
+    # train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
+    # test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
+    # pytorch utility to create random splits
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [int(len(full_dataset) * .8),
+                                                                              int(len(full_dataset) * .2)])
     for (model_name, model) in target_models:
 
         # train_size = int(0.8*len(full_dataset))
         # test_size =len(full_dataset) - train_size
 
-        test_data_loader = torch.utils.data.DataLoader(full_dataset, batch_size=64, shuffle=False)
+        test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False)
         num_sample = len(full_dataset)
         # universal perturbation generation
         if not os.path.exists(model_name + '_universal_attack_noise.npy'):
@@ -123,7 +138,7 @@ def experiment_1():
         fgsm_result.append(fgsm_ast)
         fgsm_diff.append(diff)
         # # optimization attack
-        opt_ast, diff = opt_ex(test_dataset, model, model_name, target, device, num_sample, image_size)
+        opt_ast, diff = opt_ex(test_set, model, model_name, target, device, num_sample, image_size)
         print(opt_ast)
         opt_result.append(opt_ast)
         opt_diff.append(diff)
@@ -190,6 +205,7 @@ def experiment_2(gen=True):
     basecnn = 'baseline.pt'
     nvidia = 'nvidia.pt'
     vgg16 = 'vgg16.pt'
+    satellitenet = 'satellitenet.pth'
     model1 = BaseCNN()
     model1.to(device)
     model1.load_state_dict(torch.load(basecnn))
@@ -202,9 +218,13 @@ def experiment_2(gen=True):
     model3.to(device)
     model3.load_state_dict(torch.load(vgg16))
     model3.eval()
-    target_models.append(('baseline', model1))
-    target_models.append(('nvidia', model2))
-    target_models.append(('vgg16', model3))
+    model4 = myModel()
+    model4.to(device)
+    model4.load_state_dict(torch.load(satellitenet))
+    model4.eval()
+    target_models.append(('baseline', model4))
+    # target_models.append(('nvidia', model2))
+    # target_models.append(('vgg16', model3))
 
     root_dir = '../data/speed/'
     target = 0.3
@@ -270,12 +290,12 @@ def ex2_draw(result):
 
 
 def ex2_fun(gen_model, test_model, device):
-    full_indices = list(range(5614))
-    test_indices = list(np.random.choice(5614, int(0.2 * 5614), replace=False))
-    root_dir = '../udacity-data'
+    # full_indices = list(range(5614))
+    # test_indices = list(np.random.choice(5614, int(0.2 * 5614), replace=False))
+    root_dir = '../data/speed'
     (gen_model_name, gen_net) = gen_model
     (test_model_name, test_net) = test_model
-    image_size = (128, 128)
+    image_size = (224, 224)
     # gen_image_size =None
     # if gen_model_name == 'baseline':
     #     gen_image_size = (128, 128)
@@ -291,12 +311,17 @@ def ex2_fun(gen_model, test_model, device):
     #     test_image_size = (66, 200)
     # elif test_model_name == 'vgg16':
     #     test_image_size = (224, 224)
-    composed = transforms.Compose([Rescale((image_size[1], image_size[0])), Preprocess(), ToTensor()])
+    # composed = transforms.Compose([Rescale((image_size[1], image_size[0])), Preprocess(), ToTensor()])
     # test_composed = transforms.Compose([Rescale((test_image_size[1],test_image_size[0])), Preprocess(), ToTensor()])
     # train_dataset = UdacityDataset(root_dir, ['HMB1', 'HMB2', 'HMB4'], test_composed, type_='train')
-    full_dataset = UdacityDataset(root_dir, ['testing'], composed, type_='test')
+    # full_dataset = UdacityDataset(root_dir, ['testing'], composed, type_='test')
+    data_transforms = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    test_set = PyTorchSatellitePoseEstimationDataset('test', root_dir, data_transforms)
     # dataset = torch.utils.data.Subset(full_dataset, test_indices)
-    dataset = full_dataset
+    # dataset = full_dataset
     # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
     # test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
     # test_generator = DataLoader(test_dataset, batch_size=1, shuffle=False)
@@ -318,7 +343,7 @@ def ex2_fun(gen_model, test_model, device):
     for attack in attacks:
         total_diff = np.array([])
         adv_test_path = adv_root_path + gen_model_name + '/' + attack + '/testing/npy/'
-        data_loader = iter(DataLoader(full_dataset, batch_size=64, shuffle=False))
+        data_loader = iter(DataLoader(test_set, batch_size=64, shuffle=False))
 
         for i in range(88):
             adv_image = np.load(adv_test_path + 'batch_' + str(i) + '.npy')
@@ -337,8 +362,8 @@ def ex2_fun(gen_model, test_model, device):
             total_diff = np.concatenate((total_diff, diff))
         success_ = len(total_diff[abs(total_diff) >= target])
         print(np.mean(total_diff))
-        print('test ' + gen_model_name + ' ' + attack + ' adv_image on ' + test_model_name + ' model:', success_ / 5614)
-        success.append(success_ / 5614)
+        print('test ' + gen_model_name + ' ' + attack + ' adv_image on ' + test_model_name + ' model:', success_ )
+        success.append(success_)
 
     # print(len(gen_dataset))
     # for i in range(len(dataset)):
@@ -580,9 +605,12 @@ def ex3_gen_adv(generator, gen_model, device):
         for (hmb, start) in hmb_list:
             print(model_name, hmb)
             if train:
-                train_dataset = UdacityDataset(root_dir, [hmb], test_composed, type_='train')
+                # train_dataset = UdacityDataset(root_dir, [hmb], test_composed, type_='train')
+                train_dataset = PyTorchSatellitePoseEstimationDataset('train', speed_root, data_transforms)
             else:
-                train_dataset = UdacityDataset(root_dir, [hmb], test_composed, type_='test')
+                # train_dataset = UdacityDataset(root_dir, [hmb], test_composed, type_='test')
+                train_dataset = PyTorchSatellitePoseEstimationDataset('test', speed_root, data_transforms)
+
             generator = DataLoader(train_dataset, batch_size=64, shuffle=False, num_workers=8)
             for i, batch in enumerate(generator):
                 batch_x = batch['image']

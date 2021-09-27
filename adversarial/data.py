@@ -84,9 +84,7 @@ class AdvDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
-# class SpeedDataset(Dataset):
-#     def __init__(self):
-        # self.
+
 class UdacityDataset(Dataset):
     
     def __init__(self, root_dir, hmb_list, transform=None, type_='train'):

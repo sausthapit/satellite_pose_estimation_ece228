@@ -95,7 +95,9 @@ class myorigModel(models.ResNet):
         #return orie_output,pos_output
         return x
     """
-'''  
+'''
+
+
 class myModel(nn.Module):
     def __init__(self):
         """Load the pretrained ResNet-50 and replace top fc layer."""
@@ -325,7 +327,7 @@ def main(speed_root, epochs, batch_size):
     # Training
     trained_model = train_model(new_model, exp_lr_scheduler, sgd_optimizer, criterion,
                                 dataloaders, device, dataset_sizes, epochs)
-
+    torch.save(trained_model.state_dict(), 'satellitenet.pth')
     # Generating submission
     submission = SubmissionWriter()
     test_set = PyTorchSatellitePoseEstimationDataset('test',  speed_root, data_transforms)

@@ -4,9 +4,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 import numpy as np
+from utils import get_selected_element
 
 def optimized_attack(target_model, target, x, device):
-    y_pred =(target_model(x))[1][0] # Only taking the x axis
+    y_pred =get_selected_element(target_model(x))# Only taking the x axis
     y_adv = y_pred
     # if y_pred > -0.1:
     #     y_target = y_pred - target
@@ -24,7 +25,7 @@ def optimized_attack(target_model, target, x, device):
     for i in range(100):
         perturbed_image = x + perturb
         perturbed_image = torch.clamp(perturbed_image, 0, 1)
-        y_adv = (target_model(perturbed_image))[1][0]
+        y_adv = get_selected_element(target_model(perturbed_image))
         optimizer.zero_grad()
         loss_y = F.mse_loss(y_adv, y_target)
         loss_n = torch.mean(torch.pow(perturb, 2))
