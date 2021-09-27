@@ -14,7 +14,7 @@ import math
 import matplotlib.pyplot as plt
 import csv
 from os import path
-from scipy.misc import imread, imresize, imsave
+# from scipy.misc import imread, imresize, imsave
 import pandas as pd 
 import time
 from torchvision import transforms, utils
@@ -52,6 +52,7 @@ def median_filter_np(x, width, height=-1):
     return ndimage.filters.median_filter(x, size=2, mode='reflect')
 
 def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
+    device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
     advGAN_generator = Generator(3,3, model_name).to(device)
     advGAN_generator.load_state_dict(torch.load('./models/' + model_name + '_netG_epoch_60.pth'))         
     advGAN_generator.eval() 

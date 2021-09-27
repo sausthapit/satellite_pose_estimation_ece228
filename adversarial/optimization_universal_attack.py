@@ -1,6 +1,9 @@
 import os
 from optimization_attack import optimized_attack
-import numpy as np 
+import numpy as np
+
+from utils import PyTorchSatellitePoseEstimationDataset
+
 np.random.seed(0)
 
 import torch
@@ -16,7 +19,7 @@ from data import UdacityDataset, Rescale, Preprocess, ToTensor
 #from scipy.misc import imresize
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-
+from poseloss_new_arch import myModel
 def proj_lp(v, xi, p):
     # Project on the lp ball centered at 0 and of radius xi
     v_ = v.detach().cpu().numpy()
@@ -101,19 +104,28 @@ def generate_noise(dataset, model, model_name, device, target):
     return perturbation
 
 if __name__ =="__main__":
-    target_model = 'baseline.pt'
+    target_model = 'satellitenet.pt'
     target = 0.3
-    root_dir = '../udacity-data'
-    test_composed = transforms.Compose([Rescale((128, 128)), Preprocess('baseline'), ToTensor()])
-    full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
-    train_size = int(0.8*len(full_dataset))
-    test_size =len(full_dataset) - train_size
-    train_dataset, test_dataset = torch.utils.data.random_split(full_dataset, [train_size, test_size])
+    speed_root = '../../data/speed'
+    test_composed = transforms.Compose([Rescale((224, 224)), Preprocess('baseline'), ToTensor()])
+    # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
+    data_transforms = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    test_set = PyTorchSatellitePoseEstimationDataset('test', speed_root, data_transforms)
+    full_dataset = PyTorchSatellitePoseEstimationDataset('train', speed_root, data_transforms)
+    # train_size = int(0.8*len(full_dataset))
+    # test_size =len(full_dataset) - train_size
+    # train_dataset, test_dataset = torch.utils.data.random_split(full_dataset, [train_size, test_size])
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [int(len(full_dataset) * .8),
+                                                                              int(len(full_dataset) * .2)])
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
 
     dataloader = torch.utils.data.DataLoader(train_dataset,1,True)    
 
-    model = BaseCNN()
+    # model = BaseCNN()
+    model = myModel()
     model.to(device)
     model.load_state_dict(torch.load(target_model))
     model.eval()

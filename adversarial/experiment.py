@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from data import UdacityDataset, Rescale, Preprocess, ToTensor, AdvDataset
-#from model import BaseCNN, Nvidia, build_vgg16, Vgg16
+from model import BaseCNN, Nvidia, build_vgg16, Vgg16
 # from viewer import draw
 # from scipy.misc import imresize
 from torchvision import datasets, transforms

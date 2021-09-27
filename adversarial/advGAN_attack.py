@@ -6,9 +6,10 @@ import torchvision.datasets
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from advGAN.advGAN import AdvGAN_Attack
-from model import BaseCNN, build_vgg16, Nvidia, Vgg16
+#from model import BaseCNN, build_vgg16, Nvidia, Vgg16
 from data import UdacityDataset, Rescale, Preprocess, ToTensor
 from advGAN.advGAN_Uni import AdvGAN_Uni_Attack
+from poseloss_new_arch import myModel
 
 def advGAN_Attack(model_name, target_model_path, target, train_dataset, universal=False):
     image_nc=3
@@ -31,6 +32,8 @@ def advGAN_Attack(model_name, target_model_path, target, train_dataset, universa
     elif 'vgg16' in target_model_path:
         targeted_model = Vgg16().to(device)
        #image_size = (224, 224)
+    elif 'satellitenet' in target_model_path:
+        targeted_model=myModel
 
     targeted_model.load_state_dict(torch.load(target_model_path))
     targeted_model.eval()
