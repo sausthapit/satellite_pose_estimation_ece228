@@ -10,8 +10,9 @@ import os
 import random
 from scipy import ndimage
 import cv2
-from scipy.misc import imread, imresize
+#from scipy.misc import imread, imresize
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
 import viewer
 
 class ConcatDataset(Dataset):
