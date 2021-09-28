@@ -62,7 +62,7 @@ def experiment_1():
     # target_models.append(('nvidia', model2))
 
     # root_dir = '../udacity-data'
-    speed_root='../dataset/speed'
+    speed_root='/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
     target = 0.3
     # attacks = ('FGSM', 'Optimization', 'Optimization Universal', 'AdvGAN', 'AdvGAN Universal')
     fgsm_result = []
@@ -227,7 +227,7 @@ def experiment_2(gen=True):
     # target_models.append(('nvidia', model2))
     # target_models.append(('vgg16', model3))
 
-    root_dir = '../data/speed/'
+    root_dir = '/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
     target = 0.3
     # models = ('baseline', 'nvidia', 'vgg16')
     models = ('satellite')

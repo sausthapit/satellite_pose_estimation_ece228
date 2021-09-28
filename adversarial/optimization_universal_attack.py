@@ -46,7 +46,7 @@ def universal_attack(dataset, model, device, target, delta=0.3, max_iters = np.i
         print('Starting pass number: ', itr)
 
         for k, data in enumerate(dataloader):
-            cur_img = data['image']
+            cur_img = data
             cur_img = cur_img.type(torch.FloatTensor)
             cur_img = cur_img.to(device)
             perturbed_image = cur_img + v
