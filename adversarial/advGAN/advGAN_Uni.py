@@ -6,7 +6,8 @@ import torch.nn.functional as F
 import torchvision
 import os
 import matplotlib.pyplot as plt
-from scipy.misc import imsave
+#from scipy.misc import imsave
+import cv2
 models_path = './models/'
 
 
@@ -177,4 +178,4 @@ class AdvGAN_Uni_Attack:
                 noise_x = torch.from_numpy(self.im_noise).type(torch.FloatTensor).to(self.device)
                 noise = self.netG(noise_x)
                 noise = noise.squeeze().detach().cpu().numpy().transpose(1, 2, 0)
-                imsave('noise_' + str(epoch) + '.jpg', noise)
+                cv2.imsave('noise_' + str(epoch) + '.jpg', noise)
