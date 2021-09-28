@@ -227,7 +227,7 @@ def experiment_2(gen=True):
     # target_models.append(('nvidia', model2))
     # target_models.append(('vgg16', model3))
 
-    root_dir = '../data/speed/'
+    root_dir = '../../data/speed/'
     target = 0.3
     # models = ('baseline', 'nvidia', 'vgg16')
     models = ('satellite')
