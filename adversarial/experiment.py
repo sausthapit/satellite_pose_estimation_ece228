@@ -227,11 +227,9 @@ def experiment_2(gen=True):
     # target_models.append(('nvidia', model2))
     # target_models.append(('vgg16', model3))
 
-<<<<<<< HEAD
+
     root_dir = '/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
-=======
-    root_dir = '../../data/speed/'
->>>>>>> 9c7bd80e646318f4804d11ea9e86c0eeab14ae9b
+
     target = 0.3
     # models = ('baseline', 'nvidia', 'vgg16')
     models = ('satellite')
