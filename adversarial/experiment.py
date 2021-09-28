@@ -60,7 +60,7 @@ def experiment_1():
     target_models.append(('baseline', model4))
     # target_models.append(('vgg16', model3))
     # target_models.append(('nvidia', model2))
-
+    free_gpu_cache()
     # root_dir = '../udacity-data'
     speed_root='../dataset/speed'
     target = 0.3
@@ -199,7 +199,21 @@ def experiment_1():
     # plt.legend()
     # plt.savefig('experiment_result/experiment_1/result.jpg')
 
+from GPUtil import showUtilization as gpu_usage
+from numba import cuda
 
+def free_gpu_cache():
+    print("Initial GPU Usage")
+    gpu_usage()
+
+    torch.cuda.empty_cache()
+
+    cuda.select_device(0)
+    cuda.close()
+    cuda.select_device(0)
+
+    print("GPU Usage after emptying the cache")
+    gpu_usage()
 def experiment_2(gen=True):
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
     target_models = []
