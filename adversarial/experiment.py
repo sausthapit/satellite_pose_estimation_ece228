@@ -110,27 +110,27 @@ def experiment_1():
         test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False)
         num_sample = len(full_dataset)
         # universal perturbation generation
-        if not os.path.exists(model_name + '_universal_attack_noise.npy'):
-            print('Start universal attack training')
-            perturbation = generate_noise(train_dataset, model, model_name, device, target)
-            np.save(model_name + '_universal_attack_noise', perturbation)
-            print('Finish universal attack training.')
-
-        # # advGAN training
-        if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
-            print('Start advGAN training')
-            advGAN = advGAN_Attack(model_name, model_name + '.pt', target + 0.2, train_dataset)
-            torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
-            print('Finish advGAN training')
-
-        # # advGAN_uni training
-        if not os.path.exists('./models/' + model_name + '_universal_netG_epoch_60.pth'):
-            print('Start advGAN_uni training')
-            advGAN_uni = advGAN_Attack(model_name, model_name + '.pt', target + 0.2, train_dataset, universal=True)
-            advGAN_uni.save_noise_seed(model_name + '_noise_seed.npy')
-
-            torch.save(advGAN_uni.netG.state_dict(), './models/' + model_name + '_universal_netG_epoch_60.pth')
-            print('Finish advGAN_uni training')
+        # if not os.path.exists(model_name + '_universal_attack_noise.npy'):
+        #     print('Start universal attack training')
+        #     perturbation = generate_noise(train_dataset, model, model_name, device, target)
+        #     np.save(model_name + '_universal_attack_noise', perturbation)
+        #     print('Finish universal attack training.')
+        #
+        # # # advGAN training
+        # if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
+        #     print('Start advGAN training')
+        #     advGAN = advGAN_Attack(model_name, model_name + '.pt', target + 0.2, train_dataset)
+        #     torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
+        #     print('Finish advGAN training')
+        #
+        # # # advGAN_uni training
+        # if not os.path.exists('./models/' + model_name + '_universal_netG_epoch_60.pth'):
+        #     print('Start advGAN_uni training')
+        #     advGAN_uni = advGAN_Attack(model_name, model_name + '.pt', target + 0.2, train_dataset, universal=True)
+        #     advGAN_uni.save_noise_seed(model_name + '_noise_seed.npy')
+        #
+        #     torch.save(advGAN_uni.netG.state_dict(), './models/' + model_name + '_universal_netG_epoch_60.pth')
+        #     print('Finish advGAN_uni training')
 
         print("Testing: " + model_name)
         # fgsm attack
