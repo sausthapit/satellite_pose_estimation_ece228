@@ -139,25 +139,25 @@ def experiment_1():
         fgsm_result.append(fgsm_ast)
         fgsm_diff.append(diff)
         # # optimization attack
-        opt_ast, diff = opt_ex(test_set, model, model_name, target, device, num_sample, image_size)
-        print(opt_ast)
-        opt_result.append(opt_ast)
-        opt_diff.append(diff)
-        # optimized-based universal attack
-        optu_ast, diff = opt_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        print(optu_ast)
-        optu_result.append(optu_ast)
-        optu_diff.append(diff)
-        # advGAN attack
-        advGAN_ast, diff = advGAN_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        print(advGAN_ast)
-        advGAN_result.append(advGAN_ast)
-        advGAN_diff.append(diff)
-        # advGAN_universal attack
-        advGANU_ast, diff = advGAN_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        print(advGANU_ast)
-        advGANU_result.append(advGANU_ast)
-        advGANU_diff.append(diff)
+        # opt_ast, diff = opt_ex(test_set, model, model_name, target, device, num_sample, image_size)
+        # print(opt_ast)
+        # opt_result.append(opt_ast)
+        # opt_diff.append(diff)
+        # # optimized-based universal attack
+        # optu_ast, diff = opt_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        # print(optu_ast)
+        # optu_result.append(optu_ast)
+        # optu_diff.append(diff)
+        # # advGAN attack
+        # advGAN_ast, diff = advGAN_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        # print(advGAN_ast)
+        # advGAN_result.append(advGAN_ast)
+        # advGAN_diff.append(diff)
+        # # advGAN_universal attack
+        # advGANU_ast, diff = advGAN_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        # print(advGANU_ast)
+        # advGANU_result.append(advGANU_ast)
+        # advGANU_diff.append(diff)
 
     # print(fgsm_result)
     # print(opt_result)
