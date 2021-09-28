@@ -30,14 +30,15 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     target_r_x = target_r_x.to(device)
     image.requires_grad = True
     output = model(image)
-    adv_output = output.clone()
+    tmp=get_selected_element(output)
+    adv_output = tmp.clone()
     print(output)
 
     diff = 0
     # while abs(diff) < abs(target):
     for i in range(5):
         # print(i)
-        adv_r_x=get_selected_element(adv_output)
+        adv_r_x=(adv_output)
         loss = F.mse_loss(adv_r_x, target_r_x)
         model.zero_grad()
         loss.backward(retain_graph=True)
