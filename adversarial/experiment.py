@@ -452,7 +452,7 @@ def fgsm_ex(test_dataset, model, model_name, target, device, num_sample, image_s
     diff_total = np.array([])
     # print(len(test_dataset))
     for i, sample in enumerate(test_dataset):
-        diff, plt_, norm_noise, _ = attack_test.fgsm_attack_test(model, sample['image'], target, device,
+        diff, plt_, norm_noise, _ = attack_test.fgsm_attack_test(model, sample[0], target, device,
                                                                  image_size=image_size)
         diff = np.squeeze(diff)
         diff_total = np.concatenate((diff_total, diff))
