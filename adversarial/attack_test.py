@@ -186,7 +186,7 @@ def fgsm_attack_test(model, image, target, device, epsilon=0.01, image_size=(224
     diff, perturbed_image, steer, adv_output, noise = fgsm_attack(
         model, image, target, device)
     plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
-                         0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], image_size)
+                         0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy(), adv_output.detach().cpu().numpy(), image_size)
     return diff, plt, np.sum(noise.detach().cpu().numpy()), perturbed_image.detach().cpu().numpy()
 
 

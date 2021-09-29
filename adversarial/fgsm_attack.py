@@ -20,6 +20,9 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     # image= image.type(torch.FloatTensor)
     output = model(image)
     r_x =get_selected_element(output)
+    print('this is ooutput')
+    #print(output[1][0])
+    #r_x = output[1][0]
     perturbed_image = image.clone()
     # steer = steer.type(torch.FloatTensor)
     # if (steer.item() > -0.1):
@@ -30,16 +33,26 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     target_r_x = target_r_x.to(device)
     image.requires_grad = True
     output = model(image)
-    tmp=get_selected_element(output)
-    adv_output = tmp.clone()
-    print(output)
+    adv_r_x=get_selected_element(output).clone()
+    #adv_output = output.clone()
+    #print(output)
 
     diff = 0
     # while abs(diff) < abs(target):
     for i in range(5):
         # print(i)
-        adv_r_x=(adv_output)
+        #adv_r_x=get_selected_element(adv_output)
+        print("this is start")
+        print(adv_r_x)
+        print("this is mid")
+        print(target_r_x)
+        print("this is end")
+        print ('adv_r_x')
+        print(len(adv_r_x))
+        print('target_r_x')
+        print(len(target_r_x))
         loss = F.mse_loss(adv_r_x, target_r_x)
+        print(loss)
         model.zero_grad()
         loss.backward(retain_graph=True)
         image_grad = image.grad.data
@@ -51,7 +64,7 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
 
     noise = torch.clamp(perturbed_image - image, 0, 1)
 
-    return diff, perturbed_image, r_x, adv_output, noise
+    return diff, perturbed_image, r_x, adv_r_x, noise
 if __name__ == "__main__":
     pass
 

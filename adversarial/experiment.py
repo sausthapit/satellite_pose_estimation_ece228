@@ -60,7 +60,7 @@ def experiment_1():
     target_models.append(('baseline', model4))
     # target_models.append(('vgg16', model3))
     # target_models.append(('nvidia', model2))
-    free_gpu_cache()
+    #free_gpu_cache()
     # root_dir = '../udacity-data'
     speed_root='/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
     target = 0.3
@@ -91,7 +91,7 @@ def experiment_1():
     # train_dataset = UdacityDataset(root_dir, ['HMB1', 'HMB2', 'HMB4'], test_composed, type_='train')
     # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
     data_transforms = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((128,128 )),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
     full_dataset = PyTorchSatellitePoseEstimationDataset('train', speed_root, data_transforms)
@@ -107,7 +107,7 @@ def experiment_1():
         # train_size = int(0.8*len(full_dataset))
         # test_size =len(full_dataset) - train_size
 
-        test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False)
+        test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=32, shuffle=False)
         num_sample = len(full_dataset)
         # universal perturbation generation
         # if not os.path.exists(model_name + '_universal_attack_noise.npy'):
