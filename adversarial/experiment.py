@@ -55,14 +55,16 @@ def experiment_1():
     # model3.eval()
     model4=myModel()
     model4.to(device)
-    model4.load_state_dict(torch.load(satellitenet))
+    model4.load_state_dict(torch.load(satellitenet,map_location=device))
     model4.eval()
-    target_models.append(('baseline', model4))
+    target_models.append(('satellitenet', model4))
     # target_models.append(('vgg16', model3))
     # target_models.append(('nvidia', model2))
     #free_gpu_cache()
     # root_dir = '../udacity-data'
     speed_root='/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
+    speed_root='/mnt/hgfs/C/Users/Saurav/Google Drive/Work_related/Experiments/Warwick/Fairspace_UseCases/ADR/Datasets/speed'
+
     target = 0.3
     # attacks = ('FGSM', 'Optimization', 'Optimization Universal', 'AdvGAN', 'AdvGAN Universal')
     fgsm_result = []
@@ -91,7 +93,7 @@ def experiment_1():
     # train_dataset = UdacityDataset(root_dir, ['HMB1', 'HMB2', 'HMB4'], test_composed, type_='train')
     # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
     data_transforms = transforms.Compose([
-        transforms.Resize((128,128 )),
+        transforms.Resize((224,224 )),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
     full_dataset = PyTorchSatellitePoseEstimationDataset('train', speed_root, data_transforms)
@@ -107,7 +109,7 @@ def experiment_1():
         # train_size = int(0.8*len(full_dataset))
         # test_size =len(full_dataset) - train_size
 
-        test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=32, shuffle=False)
+        test_data_loader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False)
         num_sample = len(full_dataset)
         # universal perturbation generation
         # if not os.path.exists(model_name + '_universal_attack_noise.npy'):
@@ -116,12 +118,12 @@ def experiment_1():
         #     np.save(model_name + '_universal_attack_noise', perturbation)
         #     print('Finish universal attack training.')
         #
-        # # # advGAN training
-        # if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
-        #     print('Start advGAN training')
-        #     advGAN = advGAN_Attack(model_name, model_name + '.pt', target + 0.2, train_dataset)
-        #     torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
-        #     print('Finish advGAN training')
+        # # advGAN training
+        if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
+            print('Start advGAN training')
+            advGAN = advGAN_Attack(model_name, model_name + '.pth', target + 0.2, train_dataset)
+            torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
+            print('Finish advGAN training')
         #
         # # # advGAN_uni training
         # if not os.path.exists('./models/' + model_name + '_universal_netG_epoch_60.pth'):
@@ -134,20 +136,20 @@ def experiment_1():
 
         print("Testing: " + model_name)
         # fgsm attack
-        fgsm_ast, diff = fgsm_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        print(fgsm_ast)
-        fgsm_result.append(fgsm_ast)
-        fgsm_diff.append(diff)
-        # # optimization attack
-        # opt_ast, diff = opt_ex(test_set, model, model_name, target, device, num_sample, image_size)
-        # print(opt_ast)
-        # opt_result.append(opt_ast)
-        # opt_diff.append(diff)
-        # # optimized-based universal attack
-        # optu_ast, diff = opt_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        # print(optu_ast)
-        # optu_result.append(optu_ast)
-        # optu_diff.append(diff)
+        # fgsm_ast, diff = fgsm_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        # print(fgsm_ast)
+        # fgsm_result.append(fgsm_ast)
+        # fgsm_diff.append(diff)
+        # optimization attack
+        opt_ast, diff = opt_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        print(opt_ast)
+        opt_result.append(opt_ast)
+        opt_diff.append(diff)
+        # optimized-based universal attack
+        optu_ast, diff = opt_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        print(optu_ast)
+        optu_result.append(optu_ast)
+        optu_diff.append(diff)
         # # advGAN attack
         # advGAN_ast, diff = advGAN_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
         # print(advGAN_ast)
@@ -199,21 +201,21 @@ def experiment_1():
     # plt.legend()
     # plt.savefig('experiment_result/experiment_1/result.jpg')
 
-from GPUtil import showUtilization as gpu_usage
-from numba import cuda
+# from GPUtil import showUtilization as gpu_usage
+# from numba import cuda
 
-def free_gpu_cache():
-    print("Initial GPU Usage")
-    gpu_usage()
-
-    torch.cuda.empty_cache()
-
-    cuda.select_device(0)
-    cuda.close()
-    cuda.select_device(0)
-
-    print("GPU Usage after emptying the cache")
-    gpu_usage()
+# def free_gpu_cache():
+#     print("Initial GPU Usage")
+#     gpu_usage()
+#
+#     torch.cuda.empty_cache()
+#
+#     cuda.select_device(0)
+#     cuda.close()
+#     cuda.select_device(0)
+#
+#     print("GPU Usage after emptying the cache")
+#     gpu_usage()
 def experiment_2(gen=True):
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
     target_models = []
@@ -333,7 +335,7 @@ def ex2_fun(gen_model, test_model, device):
     # train_dataset = UdacityDataset(root_dir, ['HMB1', 'HMB2', 'HMB4'], test_composed, type_='train')
     # full_dataset = UdacityDataset(root_dir, ['testing'], composed, type_='test')
     data_transforms = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((128, 128)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
     test_set = PyTorchSatellitePoseEstimationDataset('test', root_dir, data_transforms)
@@ -472,7 +474,7 @@ def fgsm_ex(test_dataset, model, model_name, target, device, num_sample, image_s
         diff_total = np.concatenate((diff_total, diff))
         # if i % 64 == 0:
         #     plt_.savefig('experiment_result/experiment_1/' + model_name + '/fgsm_attack/' + str(i) + '.jpg')
-        plt_.close()
+        # plt_.close()
         total_noise += norm_noise
         fgsm_success += len(diff[diff > abs(target)])
     # print(total_noise / (1123*image_size[0]*image_size[1]*3))
@@ -484,8 +486,8 @@ def opt_ex(test_dataset, model, model_name, target, device, num_sample, image_si
     opt_success = 0
     diff_total = np.array([])
     for i, sample in enumerate(test_dataset):
-        sample['image'] = sample['image'].unsqueeze(0)
-        diff, plt_, _ = attack_test.optimized_attack_test(model, sample['image'], target, device, image_size=image_size)
+        # sample[0] = sample[0].unsqueeze(0)
+        diff, plt_, _ = attack_test.optimized_attack_test(model, sample[0], target, device, image_size=image_size)
         diff = np.array([diff])
         diff_total = np.concatenate((diff_total, diff))
         # if i % 64 == 0:

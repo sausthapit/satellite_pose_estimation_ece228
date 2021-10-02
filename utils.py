@@ -38,10 +38,11 @@ class Camera:
          [0,     0,      1]]
     K = np.array(k)
 
-def get_selected_element(vec,selected=0):
+def get_selected_element(vec,selected=range(2)):
 #     Selects the x,y or z from the model output. By default selects x 
+    return vec[1][0][selected]
 
-    return vec[1][selected]
+
 
 def process_json_dataset(root_dir):
     with open(os.path.join(root_dir, 'train.json'), 'r') as f:

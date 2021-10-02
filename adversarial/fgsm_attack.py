@@ -19,9 +19,12 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     image =image.to(device)
     # image= image.type(torch.FloatTensor)
     output = model(image)
-    r_x =get_selected_element(output)
-    print('this is ooutput')
-    #print(output[1][0])
+
+    r_xy =get_selected_element(output)
+
+
+    print('this is original ooutput')
+    print(r_xy)
     #r_x = output[1][0]
     perturbed_image = image.clone()
     # steer = steer.type(torch.FloatTensor)
@@ -29,30 +32,35 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     #     target_steer = steer + target
     # else:
     #     target_steer = steer - target
-    target_r_x = r_x - target
+    target_r_x = r_xy - target
     target_r_x = target_r_x.to(device)
     image.requires_grad = True
     output = model(image)
-    adv_r_x=get_selected_element(output).clone()
+    adv_r_x=get_selected_element(output)
     #adv_output = output.clone()
     #print(output)
-
+    # print(output[1])
+    # print(adv_r_x)
     diff = 0
+    loss_function = nn.GaussianNLLLoss()
     # while abs(diff) < abs(target):
     for i in range(5):
-        # print(i)
+        print(i)
         #adv_r_x=get_selected_element(adv_output)
-        print("this is start")
-        print(adv_r_x)
-        print("this is mid")
-        print(target_r_x)
-        print("this is end")
-        print ('adv_r_x')
-        print(len(adv_r_x))
-        print('target_r_x')
-        print(len(target_r_x))
+        # print("this is start")
+        # print(adv_r_x)
+        # print("this is mid")
+        # print(target_r_x)
+        # print("this is end")
+
+        # print(len(adv_r_x))
+        # print('target_r_x')
+        # print(len(target_r_x))
+
+        # loss = nn.GaussianNLLLoss(adv_r_x, target_r_x)
         loss = F.mse_loss(adv_r_x, target_r_x)
-        print(loss)
+        # loss=loss_function(adv_r_x,r_x)
+        # print(loss)
         model.zero_grad()
         loss.backward(retain_graph=True)
         image_grad = image.grad.data
@@ -60,11 +68,13 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
         adv_output = model(perturbed_image)
         # print(adv_output)
         adv_r_x = get_selected_element(adv_output)
+        print (adv_r_x)
         diff = abs(adv_r_x.detach().cpu().numpy() - get_selected_element(output).detach().cpu().numpy())
-
+        if(loss<0.01):
+            break
     noise = torch.clamp(perturbed_image - image, 0, 1)
 
-    return diff, perturbed_image, r_x, adv_r_x, noise
+    return diff, perturbed_image, r_xy, adv_r_x, noise
 if __name__ == "__main__":
     pass
 

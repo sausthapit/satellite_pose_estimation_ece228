@@ -32,8 +32,8 @@ def optimized_attack(target_model, target, x, device):
         loss_adv = loss_y + loss_n
         loss_adv.backward(retain_graph=True)
         optimizer.step()
-        diff = y_adv.item() - y_pred.item()
-        if abs(diff) >= abs(target):
+        diff = y_adv.detach().cpu().numpy() - y_pred.detach().cpu().numpy()
+        if abs(np.linalg.norm(diff,2)) >= abs(target):
             break
         # print(diff, target)
 

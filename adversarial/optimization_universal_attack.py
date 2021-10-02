@@ -46,7 +46,7 @@ def universal_attack(dataset, model, device, target, delta=0.3, max_iters = np.i
         print('Starting pass number: ', itr)
 
         for k, data in enumerate(dataloader):
-            cur_img = data['inputs']
+            cur_img = data[0]
             cur_img = cur_img.type(torch.FloatTensor)
             cur_img = cur_img.to(device)
             perturbed_image = cur_img + v
@@ -65,7 +65,7 @@ def universal_attack(dataset, model, device, target, delta=0.3, max_iters = np.i
 
         count = 0
         for _, data in enumerate(dataloader):
-            cur_img = data['image']
+            cur_img = data[0]
             cur_img = cur_img.type(torch.FloatTensor)
             cur_img = cur_img.to(device)
             perturbed_image = cur_img + v
@@ -85,7 +85,7 @@ def is_adversary(model, x, x_adv, target):
     y_pred = model(x).item()
     y_adv = model(x_adv).item()
     # print(y_pred, y_adv)
-    if (abs(y_adv - y_pred) >= abs(target)):
+    if (abs(torch.linalg.vector_norm(y_adv - y_pred)) >= abs(target)):
         return [True]
     else:
         return [False, target - (y_adv - y_pred)]

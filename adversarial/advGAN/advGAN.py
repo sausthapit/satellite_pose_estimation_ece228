@@ -130,7 +130,7 @@ class AdvGAN_Attack:
             loss_perturb_sum = 0
             loss_adv_sum = 0
             for _, data in enumerate(train_dataloader, start=0):
-                images = data['image']
+                images = data[0]
                 images = images.type(torch.FloatTensor)
                 images = images.to(self.device)
                 steers = self.model(images)

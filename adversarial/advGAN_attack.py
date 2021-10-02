@@ -21,7 +21,7 @@ def advGAN_Attack(model_name, target_model_path, target, train_dataset, universa
     # Define what device we are using
     print("CUDA Available: ",torch.cuda.is_available())
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
-    image_size = (128, 128)
+    image_size = (224, 224)
 
     if 'baseline' in target_model_path:
         targeted_model = BaseCNN().to(device)
@@ -33,9 +33,11 @@ def advGAN_Attack(model_name, target_model_path, target, train_dataset, universa
         targeted_model = Vgg16().to(device)
        #image_size = (224, 224)
     elif 'satellitenet' in target_model_path:
-        targeted_model=myModel
+        targeted_model=myModel().to(device)
 
-    targeted_model.load_state_dict(torch.load(target_model_path))
+    # targeted_model.load_state_dict(torch.load('satellitenet.pth', map_location=device))
+
+    targeted_model.load_state_dict(torch.load(target_model_path, map_location=device))
     targeted_model.eval()
 
     if not universal:

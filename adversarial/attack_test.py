@@ -6,13 +6,13 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from data import UdacityDataset, Rescale, Preprocess, ToTensor
 #from model import BaseCNN
-#from viewer import draw
+from viewer import draw
 #from scipy.misc import imresize
 from torchvision import datasets, transforms
 from fgsm_attack import fgsm_attack
 from advGAN.models import Generator
 from optimization_attack import optimized_attack
-#from scipy.misc import imread, imresize
+from sklearn.externals._pilutil import imresize
 import cv2
 
 def exp1_fig():
@@ -138,8 +138,8 @@ def exp1_fig():
 def generate_image(X, X_adv, noise, y_pred, y_adv, image_size):
     plt.figure(figsize=(6, 6))
     ax1 = plt.subplot(1, 3, 1)
-    ax1.title.set_text('original pred: %.4f' % y_pred)
-    X = draw(X * 255, np.array([y_pred]))
+    # ax1.title.set_text('original pred: %.4f' % y_pred)
+    # X = draw(X * 255, np.array([y_pred]))
     X = imresize(X, image_size)
     plt.imshow(X)
     ax2 = plt.subplot(1, 3, 2)
@@ -185,9 +185,15 @@ def fgsm_attack_test(model, image, target, device, epsilon=0.01, image_size=(224
     # noise = torch.clamp(perturbed_image - image, 0, 1)
     diff, perturbed_image, steer, adv_output, noise = fgsm_attack(
         model, image, target, device)
-    plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
-                         0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy(), adv_output.detach().cpu().numpy(), image_size)
-    return diff, plt, np.sum(noise.detach().cpu().numpy()), perturbed_image.detach().cpu().numpy()
+    # plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
+    #                      0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy(), adv_output.detach().cpu().numpy(), image_size)
+    print("r_x",steer)
+    print("adv_r_x",adv_output)
+    plt.imshow(np.squeeze(image.permute(0,2,3,1).detach().numpy()))
+    plt.show()
+    plt.imshow(np.squeeze(perturbed_image.permute(0, 2, 3, 1).detach().numpy()))
+    plt.show()
+    return diff, None, np.sum(noise.detach().cpu().numpy()), perturbed_image.detach().cpu().numpy()
 
 
 def optimized_attack_test(model, image, target, device, image_size=(128, 128)):
@@ -197,12 +203,12 @@ def optimized_attack_test(model, image, target, device, image_size=(128, 128)):
     image = image.to(device)
     perturbed_image, noise, steer, adv_output = optimized_attack(
         model, target, image, device)
-    diff = abs(steer.item() - adv_output.item())
+    diff = abs(torch.linalg.vector_norm(steer - adv_output))
     # plt = generate_image(image.squeeze().detach().cpu().numpy().transpose(0, 2, 3, 1)[0,:,:,:], perturbed_image.squeeze().detach().cpu().numpy().transpose(0, 2, 3, 1)[0,:,:,:], noise.squeeze().detach().cpu().numpy().transpose(0, 2, 3, 1)[0,:,:,:], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], (128, 128))
-    plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(
-        0, 2, 3, 1)[0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.item(), adv_output.item(), image_size)
+    # plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(
+    #     0, 2, 3, 1)[0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.item(), adv_output.item(), image_size)
     # plt.show()
-    return diff, plt, perturbed_image.detach().cpu().numpy()
+    return diff, None, perturbed_image.detach().cpu().numpy()
 
 
 def advGAN_test(model, image, advGAN_generator, device, image_size=(128, 128)):
@@ -215,13 +221,13 @@ def advGAN_test(model, image, advGAN_generator, device, image_size=(128, 128)):
     perturbed_image = image + torch.clamp(noise, -0.3, 0.3)
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
     adv_output = model(perturbed_image)
-    plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
-                         0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], image_size)
+    # plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
+    #                      0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], image_size)
 
     diff = abs(adv_output.detach().cpu().numpy() -
                steer.detach().cpu().numpy())
     #diff = abs(adv_output.item() - steer.item())
-    return diff, plt, perturbed_image.detach().cpu().numpy()
+    return diff, None, perturbed_image.detach().cpu().numpy()
 
 
 def advGAN_uni_test(model, image, device, noise, image_size=(128, 128)):
@@ -246,12 +252,12 @@ def optimized_uni_test(model, image, device, noise, image_size=(128, 128)):
     perturbed_image = image + noise
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
     adv_output = model(perturbed_image)
-    plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
-                         0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], image_size)
+    # plt = generate_image(image.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], perturbed_image.detach().cpu().numpy().transpose(0, 2, 3, 1)[
+    #                      0, :, :, :], noise.detach().cpu().numpy().transpose(0, 2, 3, 1)[0, :, :, :], steer.detach().cpu().numpy()[0][0], adv_output.detach().cpu().numpy()[0][0], image_size)
     # plt = generate_image(image.squeeze().detach().cpu().numpy().transpose(1, 2, 0), perturbed_image.squeeze().detach().cpu().numpy().transpose(1, 2, 0), noise.squeeze().detach().cpu().numpy().transpose(1, 2, 0), steer.item(), adv_output.item(), (128, 128))
     diff = abs(adv_output.detach().cpu().numpy() -
                steer.detach().cpu().numpy())
-    return diff, plt, perturbed_image.detach().cpu().numpy()
+    return diff, None, perturbed_image.detach().cpu().numpy()
 
 
 if __name__ == "__main__":
