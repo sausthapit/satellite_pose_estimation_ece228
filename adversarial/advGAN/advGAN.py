@@ -8,6 +8,7 @@ import os
 # torch.manual_seed(0)
 # import torch.nn as nn
 import torch.nn.functional as F
+from utils import get_selected_element
 import torch.optim as optim
 # import matplotlib.pyplot as plt
 # from data import UdacityDataset, Rescale, Preprocess, ToTensor
@@ -133,7 +134,7 @@ class AdvGAN_Attack:
                 images = data[0]
                 images = images.type(torch.FloatTensor)
                 images = images.to(self.device)
-                steers = self.model(images)
+                steers = get_selected_element(self.model(images))
                 target_steers = steers + self.target
                 target_steers = target_steers.type(torch.FloatTensor)
                 target_steers = target_steers.to(self.device)
