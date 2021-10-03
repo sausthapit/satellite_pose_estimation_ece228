@@ -98,7 +98,7 @@ class AdvGAN_Attack:
             C = 0.1
             loss_perturb = torch.mean(torch.norm(perturbation.view(perturbation.shape[0], -1), 2, dim=1))
 
-            pred_steer = self.model(adv_images)
+            pred_steer = get_selected_element(self.model(adv_images))
             loss_adv = F.mse_loss(pred_steer, y)
 
 
