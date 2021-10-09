@@ -28,6 +28,8 @@ from advGAN.models import Generator
 import os
 from advGAN_attack import advGAN_Attack
 from scipy import ndimage
+from poseloss_new_arch import myModel
+from utils import PyTorchSatellitePoseEstimationDataset
 
 def reduce_bit(image, bit_size):
     image_int = np.rint(image * (math.pow(2, bit_size) - 1))
@@ -57,21 +59,22 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
     advGAN_generator.load_state_dict(torch.load('./models/' + model_name + '_netG_epoch_60.pth'))         
     advGAN_generator.eval() 
 
-    advGAN_uni_generator = Generator(3,3, model_name).to(device)
-    advGAN_uni_generator.load_state_dict(torch.load('./models/' + model_name + '_universal_netG_epoch_60.pth'))    
-    advGAN_uni_generator.eval()
-    advGAN_uni_noise_seed = np.load(model_name + '_noise_seed.npy')
+    # advGAN_uni_generator = Generator(3,3, model_name).to(device)
+    # advGAN_uni_generator.load_state_dict(torch.load('./models/' + model_name + '_universal_netG_epoch_60.pth'))
+    # advGAN_uni_generator.eval()
+    # advGAN_uni_noise_seed = np.load(model_name + '_noise_seed.npy')
 
 
-    opt_uni_noise = np.load(model_name + '_universal_attack_noise.npy')
+    # opt_uni_noise = np.load(model_name + '_universal_attack_noise.npy')
 
     count_ori = 0
     count_adv = 0
     total = 0
+    target=0.3
 
     for _, example in enumerate(test_data_loader):
         # example = test_dataset[0]
-        example_image = np.transpose(example['image'].squeeze(0).numpy(), (1, 2, 0))
+        example_image = np.transpose(example[0].squeeze(0).numpy(), (1, 2, 0))
         # example_image = example['image'].numpy()
         # squeeze_image = reduce_bit(example_image, 4)
         squeeze_image = median_filter_np(example_image, 2)
@@ -94,18 +97,18 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
             perturbed_image = torch.clamp(perturbed_image, 0, 1)
             y_pred = net(example_image_tensor)
             y_adv = net(perturbed_image)
-        elif attack == 'advGAN_uni':
-            noise = advGAN_uni_generator(torch.from_numpy(advGAN_uni_noise_seed).type(torch.FloatTensor).to(device))
-            perturbed_image = example_image_tensor + torch.clamp(noise, -0.3, 0.3)
-            perturbed_image = torch.clamp(perturbed_image, 0, 1)
-            y_pred = net(example_image_tensor)
-            y_adv = net(perturbed_image)
-        elif attack == 'opt_uni':
-            noise = torch.from_numpy(opt_uni_noise).type(torch.FloatTensor).to(device)
-            perturbed_image = example_image_tensor + torch.clamp(noise, -0.3, 0.3)
-            perturbed_image = torch.clamp(perturbed_image, 0, 1)
-            y_pred = net(example_image_tensor)
-            y_adv = net(perturbed_image)
+        # elif attack == 'advGAN_uni':
+        #     noise = advGAN_uni_generator(torch.from_numpy(advGAN_uni_noise_seed).type(torch.FloatTensor).to(device))
+        #     perturbed_image = example_image_tensor + torch.clamp(noise, -0.3, 0.3)
+        #     perturbed_image = torch.clamp(perturbed_image, 0, 1)
+        #     y_pred = net(example_image_tensor)
+        #     y_adv = net(perturbed_image)
+        # elif attack == 'opt_uni':
+        #     noise = torch.from_numpy(opt_uni_noise).type(torch.FloatTensor).to(device)
+        #     perturbed_image = example_image_tensor + torch.clamp(noise, -0.3, 0.3)
+        #     perturbed_image = torch.clamp(perturbed_image, 0, 1)
+        #     y_pred = net(example_image_tensor)
+        #     y_adv = net(perturbed_image)
         elif attack == 'opt':
             perturbed_image, _, y_pred, y_adv = optimized_attack(net, target, example_image_tensor, device)
         # # print(net(perturbed_image))
@@ -154,7 +157,7 @@ def plot_figure():
     plt.show()
 
 def cal_detection_rate():
-    for model_name in ['baseline', 'nvidia', 'vgg16']:
+    for model_name in ['satellitenet']:
         # model_name = 'vgg16'
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if  'baseline' in model_name:
@@ -163,20 +166,29 @@ def cal_detection_rate():
             net = Nvidia()
         elif 'vgg16' in model_name:
             net = Vgg16(False)
+        elif 'satellitenet' in model_name:
+            net= myModel()
 
-        net.load_state_dict(torch.load(model_name + '.pt')) 
+        net.load_state_dict(torch.load(model_name + '.pth',map_location=device))
         net.eval()
         net = net.to(device)
-        dataset_path = '../udacity-data'
-        root_dir = dataset_path
+        # dataset_path = '../udacity-data'
+        # root_dir = dataset_path
+        # speed_root = '/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
+        speed_root = '/mnt/hgfs/C/Users/Saurav/Google Drive/Work_related/Experiments/Warwick/Fairspace_UseCases/ADR/Datasets/speed'
+        data_transforms = transforms.Compose([
+            transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+        full_dataset = PyTorchSatellitePoseEstimationDataset('test', speed_root, data_transforms)
         test_composed = transforms.Compose([Rescale((128, 128)), Preprocess('baseline'), ToTensor()])
         image_size = (128, 128)
-        full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
-        full_indices = list(range(5614))
-        test_indices = list(np.random.choice(5614, int(0.2*5614), replace=False))
-        train_indices = list(set(full_indices).difference(set(test_indices)))
-        train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
-        test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
+        # full_dataset = UdacityDataset(root_dir, ['testing'], test_composed, type_='test')
+        # full_indices = list(range(5614))
+        # test_indices = list(np.random.choice(5614, int(0.2*5614), replace=False))
+        # train_indices = list(set(full_indices).difference(set(test_indices)))
+        # train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
+        # test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
         test_data_loader = DataLoader(full_dataset, batch_size=1, shuffle=False)
         num_sample = len(full_dataset)
         target = 0.3
@@ -188,8 +200,8 @@ def cal_detection_rate():
         print('threshold', 0.01)
         attack_detection(model_name, net, test_data_loader, attack='fgsm', threshold=0.01)
         attack_detection(model_name, net, test_data_loader, attack='advGAN', threshold=0.01)
-        attack_detection(model_name, net, test_data_loader, attack='advGAN_uni', threshold=0.01)
-        attack_detection(model_name, net, test_data_loader, attack='opt_uni', threshold=0.01)
+        # attack_detection(model_name, net, test_data_loader, attack='advGAN_uni', threshold=0.01)
+        # attack_detection(model_name, net, test_data_loader, attack='opt_uni', threshold=0.01)
         attack_detection(model_name, net, test_data_loader, attack='opt', threshold=0.01)
 
 if __name__ == "__main__":
@@ -197,11 +209,12 @@ if __name__ == "__main__":
 
         # print()
         # print('threshold', 0.01)
-    attack_detection(model_name, net, test_data_loader, attack='fgsm', threshold=0.01)
-    attack_detection(model_name, net, test_data_loader, attack='advGAN', threshold=0.01)
-    attack_detection(model_name, net, test_data_loader, attack='advGAN_uni', threshold=0.01)
-    attack_detection(model_name, net, test_data_loader, attack='opt_uni', threshold=0.01)
-    attack_detection(model_name, net, test_data_loader, attack='opt', threshold=0.01)
+    cal_detection_rate()
+    # attack_detection(model_name, net, test_data_loader, attack='fgsm', threshold=0.01)
+    # attack_detection(model_name, net, test_data_loader, attack='advGAN', threshold=0.01)
+    # attack_detection(model_name, net, test_data_loader, attack='advGAN_uni', threshold=0.01)
+    # attack_detection(model_name, net, test_data_loader, attack='opt_uni', threshold=0.01)
+    # attack_detection(model_name, net, test_data_loader, attack='opt', threshold=0.01)
 
             # print(net(squeeze_perturbed_image))
             # plt.figure()
