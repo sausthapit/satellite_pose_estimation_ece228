@@ -29,7 +29,8 @@ import os
 from advGAN_attack import advGAN_Attack
 from scipy import ndimage
 from poseloss_new_arch import myModel
-from utils import PyTorchSatellitePoseEstimationDataset
+from utils import PyTorchSatellitePoseEstimationDataset, get_selected_element
+
 
 def reduce_bit(image, bit_size):
     image_int = np.rint(image * (math.pow(2, bit_size) - 1))
@@ -121,7 +122,10 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
             squeeze_perturbed_image = torch.from_numpy(np.transpose(squeeze_perturbed_image, (-1, 0, 1))).unsqueeze(0)
             squeeze_perturbed_image = squeeze_perturbed_image.type(torch.FloatTensor)
             squeeze_perturbed_image = squeeze_perturbed_image.to(device)
-            if (abs(net(perturbed_image) - net(squeeze_perturbed_image)) > threshold):
+            tmp=get_selected_element(net(perturbed_image))-get_selected_element(squeeze_perturbed_image)
+            dist=np.linalg.norm(tmp.detach().cpu().numpy())
+            if(abs(dist)>threshold):
+            # if (abs(net(perturbed_image) - net(squeeze_perturbed_image)) > threshold):
                 count_adv += 1      
     print(attack, total, count_ori, count_adv)  
 
@@ -175,7 +179,8 @@ def cal_detection_rate():
         # dataset_path = '../udacity-data'
         # root_dir = dataset_path
         # speed_root = '/home/wmg/wmsbzd/AdversarialForSpace/data/speed'
-        speed_root = '/mnt/hgfs/C/Users/Saurav/Google Drive/Work_related/Experiments/Warwick/Fairspace_UseCases/ADR/Datasets/speed'
+        speed_root='/home/wmg/wmsbzd/ML_Anita/space/data/speed'
+        # speed_root = '/mnt/hgfs/C/Users/Saurav/Google Drive/Work_related/Experiments/Warwick/Fairspace_UseCases/ADR/Datasets/speed'
         data_transforms = transforms.Compose([
             transforms.Resize((128, 128)),
             transforms.ToTensor(),
