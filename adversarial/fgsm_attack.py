@@ -45,7 +45,7 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
     loss_function = nn.GaussianNLLLoss()
     # while abs(diff) < abs(target):
     for i in range(5):
-        print(i)
+        # print(i)
         #adv_r_x=get_selected_element(adv_output)
         # print("this is start")
         # print(adv_r_x)
@@ -68,8 +68,9 @@ def fgsm_attack(model, image, target, device, epsilon=0.01, image_size=(128, 128
         adv_output = model(perturbed_image)
         # print(adv_output)
         adv_r_x = get_selected_element(adv_output)
-        print (adv_r_x)
-        diff = abs(adv_r_x.detach().cpu().numpy() - get_selected_element(output).detach().cpu().numpy())
+        # print (adv_r_x)
+        tmp = adv_r_x.detach().cpu().numpy() - get_selected_element(output).detach().cpu().numpy()
+        diff=abs(np.linalg.norm(tmp,2))
         if(loss<0.01):
             break
     noise = torch.clamp(perturbed_image - image, 0, 1)

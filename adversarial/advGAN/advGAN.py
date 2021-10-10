@@ -112,10 +112,10 @@ class AdvGAN_Attack:
         return loss_D_GAN.item(), loss_G_fake.item(), loss_perturb.item(), loss_adv.item()*loss_adv.item()
 
     def train(self, train_dataset, epochs):
-        train_dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=64,shuffle=True)
+        train_dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=8,shuffle=True)
 
         for epoch in range(1, epochs+1):
-
+            print("Epoch",epoch)
             if epoch == 50:
                 self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
                                                     lr=0.0001)

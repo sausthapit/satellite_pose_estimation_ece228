@@ -1,3 +1,4 @@
+from adversarial.fgsm_attack import fgsm_attack
 from utils import PyTorchSatellitePoseEstimationDataset
 
 import torch
@@ -7,6 +8,9 @@ from submission import SubmissionWriter
 import torch.nn.functional as F
 import argparse
 import torch.nn as nn
+from absl import flags
+
+FLAGS=flags.FLAGS
 
 try:
     from torch.hub import load_state_dict_from_url
@@ -99,10 +103,10 @@ class myorigModel(models.ResNet):
 
 
 class myModel(nn.Module):
-    def __init__(self):
+    def __init__(self,type_='teacher'):
         """Load the pretrained ResNet-50 and replace top fc layer."""
         super(myModel, self).__init__()
-       
+        self.type=type_
         resnet = models.resnet50(pretrained=True)
         modules = list(resnet.children())[:-1]  # delete the last fc layer.
         self.resnet = nn.Sequential(*modules)
@@ -126,8 +130,10 @@ class myModel(nn.Module):
         
         pos_output = self.fc_pos(output)
         orie_output = self.fc_orie(output)
-        
-        return orie_output,pos_output
+        if self.type=='teacher':
+            return orie_output,pos_output
+        else:
+            return orie_output,pos_output, output
     
         
 #self.sx = 0
@@ -165,6 +171,7 @@ def train_model(model, scheduler, optimizer, criterion, dataloaders, device, dat
     """ Training function, looping over epochs and batches. Return the trained model. """
 
     # epoch loop
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -184,7 +191,8 @@ def train_model(model, scheduler, optimizer, criterion, dataloaders, device, dat
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device).float()
-
+                if FLAGS.adv_train:
+                    _,inputs,_,_,_=fgsm_attack(model,inputs,0.3,device,epsilon=0.01,image_size=[224,224])
                 optimizer.zero_grad()
 
                 with torch.set_grad_enabled(phase == 'train'): # gradient enabled only for train mode
@@ -327,7 +335,7 @@ def main(speed_root, epochs, batch_size):
     # Training
     trained_model = train_model(new_model, exp_lr_scheduler, sgd_optimizer, criterion,
                                 dataloaders, device, dataset_sizes, epochs)
-    torch.save(trained_model.state_dict(), 'satellitenet.pth')
+    torch.save(trained_model.state_dict(), 'satellitenet_adv.pt')
     # Generating submission
     submission = SubmissionWriter()
     test_set = PyTorchSatellitePoseEstimationDataset('test',  speed_root, data_transforms)
@@ -348,5 +356,6 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', help='Number of epochs for training.', default=5)
     parser.add_argument('--batch', help='number of samples in a batch.', default=32)
     args = parser.parse_args()
-
+    flags.DEFINE_bool(
+        "adv_train", True, "Use adversarial training (on PGD adversarial examples).")
     main(args.dataset, int(args.epochs), int(args.batch))

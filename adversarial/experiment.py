@@ -41,7 +41,7 @@ def experiment_1():
     nvidia = 'nvidia.pt'
     vgg16 = 'vgg16.pt'
     satellitenet='satellitenet.pth'
-    # model1 = BaseCNN()
+    model1 = BaseCNN()
     # model1.to(device)
     # model1.load_state_dict(torch.load(basecnn))
     # model1.eval()
@@ -119,11 +119,11 @@ def experiment_1():
         #     print('Finish universal attack training.')
         #
         # # advGAN training
-        if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
-            print('Start advGAN training')
-            advGAN = advGAN_Attack(model_name, model_name + '.pth', target + 0.2, train_dataset)
-            torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
-            print('Finish advGAN training')
+        # if not os.path.exists('./models/' + model_name + '_netG_epoch_60.pth'):
+        #     print('Start advGAN training')
+        #     advGAN = advGAN_Attack(model_name, model_name + '.pth', target + 0.2, train_dataset)
+        #     torch.save(advGAN.netG.state_dict(), './models/' + model_name + '_netG_epoch_60.pth')
+        #     print('Finish advGAN training')
         #
         # # # advGAN_uni training
         # if not os.path.exists('./models/' + model_name + '_universal_netG_epoch_60.pth'):
@@ -136,15 +136,16 @@ def experiment_1():
 
         print("Testing: " + model_name)
         # fgsm attack
-        # fgsm_ast, diff = fgsm_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        # print(fgsm_ast)
-        # fgsm_result.append(fgsm_ast)
-        # fgsm_diff.append(diff)
+        fgsm_ast, diff = fgsm_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        print(fgsm_ast)
+
+        fgsm_result.append(fgsm_ast)
+        fgsm_diff.append(diff)
         # optimization attack
-        opt_ast, diff = opt_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
-        print(opt_ast)
-        opt_result.append(opt_ast)
-        opt_diff.append(diff)
+        # opt_ast, diff = opt_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
+        # print(opt_ast)
+        # opt_result.append(opt_ast)
+        # opt_diff.append(diff)
         # optimized-based universal attack
         optu_ast, diff = opt_uni_ex(test_data_loader, model, model_name, target, device, num_sample, image_size)
         print(optu_ast)
@@ -468,10 +469,12 @@ def fgsm_ex(test_dataset, model, model_name, target, device, num_sample, image_s
     diff_total = np.array([])
     # print(len(test_dataset))
     for i, sample in enumerate(test_dataset):
+        print(i)
         diff, plt_, norm_noise, _ = attack_test.fgsm_attack_test(model, sample[0], target, device,
                                                                  image_size=image_size)
         diff = np.squeeze(diff)
-        diff_total = np.concatenate((diff_total, diff))
+        # diff = np.array(diff)
+        diff_total = np.concatenate((diff_total, [diff]))
         # if i % 64 == 0:
         #     plt_.savefig('experiment_result/experiment_1/' + model_name + '/fgsm_attack/' + str(i) + '.jpg')
         # plt_.close()
