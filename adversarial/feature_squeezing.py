@@ -85,7 +85,7 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
         squeeze_image_tensor = torch.from_numpy(np.transpose(squeeze_image, (-1, 0, 1))).unsqueeze(0)
         squeeze_image_tensor = squeeze_image_tensor.type(torch.FloatTensor)
         squeeze_image_tensor = squeeze_image_tensor.to(device)
-        tmp = get_selected_element(net(example_image_tensor)) - get_selected_element(squeeze_image_tensor)
+        tmp = get_selected_element(net(example_image_tensor)) - get_selected_element(net(squeeze_image_tensor))
         dist = np.linalg.norm(tmp.detach().cpu().numpy())
         if (abs(dist) > threshold):
         # if (abs(net(example_image_tensor) - net(squeeze_image_tensor)) > threshold):
@@ -125,7 +125,7 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
             squeeze_perturbed_image = torch.from_numpy(np.transpose(squeeze_perturbed_image, (-1, 0, 1))).unsqueeze(0)
             squeeze_perturbed_image = squeeze_perturbed_image.type(torch.FloatTensor)
             squeeze_perturbed_image = squeeze_perturbed_image.to(device)
-            tmp=get_selected_element(net(perturbed_image))-get_selected_element(squeeze_perturbed_image)
+            tmp=get_selected_element(net(perturbed_image))-get_selected_element(net(squeeze_perturbed_image))
             dist=np.linalg.norm(tmp.detach().cpu().numpy())
             if(abs(dist)>threshold):
             # if (abs(net(perturbed_image) - net(squeeze_perturbed_image)) > threshold):
