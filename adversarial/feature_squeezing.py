@@ -116,8 +116,9 @@ def attack_detection(model_name, net, test_data_loader, attack, threshold=0.05):
         elif attack == 'opt':
             perturbed_image, _, y_pred, y_adv = optimized_attack(net, target, example_image_tensor, device)
         # # print(net(perturbed_image))
-
-        if abs(y_pred - y_adv) >= 0.3:
+        tmp = get_selected_element(y_pred) - get_selected_element(y_adv)
+        dist = np.linalg.norm(tmp.detach().cpu().numpy())
+        if abs(dist) >= target:
             total += 1
             perturbed_image_np = perturbed_image.squeeze().detach().cpu().numpy()
             perturbed_image_np = np.transpose(perturbed_image_np, (1, 2, 0))
